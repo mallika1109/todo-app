@@ -1,0 +1,37 @@
+name: Deploy to Production
+on:
+  workflow_dispatch:
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+      - name: Install dependencies
+        run: npm install
+      - name: Archive application
+        run: zip -r app.zip .
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: app-artifact
+          path: app.zip
+      - name: Deploy to production server
+        env:
+          SSH_KEY: ${{ secrets.SSH_KEY }}
+          PROD_SERVER_IP: ${{ secrets.PROD_SERVER_IP }}
+        run: |
+          echo "$SSH_KEY" > cloud.pem
+          chmod 600 cloud.pem
+          scp -o StrictHostKeyChecking=no -i cloud.pem app.zip ubuntu@$PROD_SERVER_IP:/home/ubuntu/
+          ssh -o StrictHostKeyChecking=no -i cloud.pem ubuntu@$PROD_SERVER_IP << 'EOF'
+            sudo apt update
+            sudo apt install -y unzip nodejs npm
+            unzip -o app.zip -d /home/ubuntu/app
+            cd /home/ubuntu/app
+            npm install
+            nohup npm start &
+          EOF
