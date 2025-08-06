@@ -6,9 +6,9 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4  # Update to v4 for consistency
       - name: Set up Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4  # Update to v4 for consistency
         with:
           node-version: '18'
       - name: Install dependencies
@@ -16,19 +16,20 @@ jobs:
       - name: Archive application
         run: zip -r app.zip .
       - name: Upload artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4  # Updated to v4
         with:
           name: app-artifact
           path: app.zip
+          retention-days: 1  # Optional: Set retention period
       - name: Deploy to test server
         env:
-          SSH_KEY: ${{ secrets.SSH_KEY }}
-          TEST_SERVER_IP: ${{ secrets.TEST_SERVER_IP }}
+          SSH_KEY: ${{ secrets.SSH_KEY }}  # Uses cloud.pem or ansible_key
+          TEST_SERVER_IP: ${{ secrets.TEST_SERVER_IP }}  # Public IP
         run: |
-          echo "$SSH_KEY" > cloud.pem
-          chmod 600 cloud.pem
-          scp -o StrictHostKeyChecking=no -i cloud.pem app.zip ubuntu@$TEST_SERVER_IP:/home/ubuntu/
-          ssh -o StrictHostKeyChecking=no -i cloud.pem ubuntu@$TEST_SERVER_IP << 'EOF'
+          echo "$SSH_KEY" > key.pem
+          chmod 600 key.pem
+          scp -o StrictHostKeyChecking=no -i key.pem app.zip ubuntu@$TEST_SERVER_IP:/home/ubuntu/
+          ssh -o StrictHostKeyChecking=no -i key.pem ubuntu@$TEST_SERVER_IP << 'EOF'
             sudo apt update
             sudo apt install -y unzip nodejs npm
             unzip -o app.zip -d /home/ubuntu/app
