@@ -26,10 +26,10 @@ jobs:
           SSH_KEY: ${{ secrets.SSH_KEY }}  # Uses cloud.pem or ansible_key
           TEST_SERVER_IP: ${{ secrets.TEST_SERVER_IP }}  # Public IP
         run: |
-          echo "$SSH_KEY" > key.pem
-          chmod 600 key.pem
-          scp -o StrictHostKeyChecking=no -i key.pem app.zip ubuntu@$TEST_SERVER_IP:/home/ubuntu/
-          ssh -o StrictHostKeyChecking=no -i key.pem ubuntu@$TEST_SERVER_IP << 'EOF'
+          echo "$SSH_KEY" > cloud.pem
+          chmod 600 cloud.pem
+          scp -o StrictHostKeyChecking=no -i cloud.pem app.zip ubuntu@$TEST_SERVER_IP:/home/ubuntu/
+          ssh -o StrictHostKeyChecking=no -i cloud.pem ubuntu@$TEST_SERVER_IP << 'EOF'
             sudo apt update
             sudo apt install -y unzip nodejs npm
             unzip -o app.zip -d /home/ubuntu/app
